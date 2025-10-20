@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>StarDream — Community Preview (Galaxy Dream)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-1: #0b0720; /* deep midnight */
+      --bg-2: #1a1233; /* softer */
+      --accent-1: #9b6ef3; /* pastel purple */
+      --accent-2: #ffb6f9; /* pastel pink */
+      --glow: 0 12px 30px rgba(155,110,243,0.18);
+      --muted: rgba(255,255,255,0.6);
+      --card: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      --glass: rgba(255,255,255,0.03);
+      --radius: 14px;
+      --glass-border: rgba(255,255,255,0.06);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg-1),#120826);font-family:'Poppins',sans-serif;color:#E8E7FF; -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+    /* App frame */
+    .app {
+      display: grid;
+      grid-template-columns: 80px 1fr 320px;
+      gap: 20px;
+      height: 100vh;
+      padding: 18px;
+      align-items: stretch;
+    }
+
+    /* Left sidebar (icons / servers) */
+    .sidebar {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius: 16px;
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:center;
+      box-shadow: var(--glow);
+      border: 1px solid var(--glass-border);
+    }
+
+    .logo {
+      width:48px;height:48px;border-radius:12px;
+      background: radial-gradient(circle at 30% 20%, var(--accent-2), transparent 20%), linear-gradient(135deg,var(--accent-1), #4b2bd6);
+      display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:20px;box-shadow:0 6px 18px rgba(155,110,243,0.18);
+    }
+
+    .server-icons {display:flex;flex-direction:column;gap:10px;margin-top:6px}
+    .server-icon {
+      width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#2a1a3f,#3a1e5e);
+      display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;
+      border:2px solid transparent;
+    }
+    .server-icon:hover{transform:translateY(-6%);border-color:rgba(255,255,255,0.06)}
+    .server-icon.active{background:linear-gradient(135deg,#5e3ee7,#ff8fe6);box-shadow:0 8px 30px rgba(155,110,243,0.28);}
+
+    /* Middle main */
+    .main {
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .topbar {
+      display:flex;justify-content:space-between;align-items:center;
+      background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--glass-border);
+      box-shadow:0 6px 16px rgba(7,5,18,0.6);
+    }
+    .search {
+      display:flex;align-items:center;gap:10px;background:var(--glass); padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);
+      width:60%;
+    }
+    .search input{background:transparent;border:0;outline:none;color:var(--muted);font-size:14px;width:100%}
+    .top-actions {display:flex;gap:10px;align-items:center}
+    .btn {
+      background:linear-gradient(90deg,var(--accent-1),var(--accent-2));
+      border:none;padding:10px 14px;border-radius:12px;color:white;font-weight:600;cursor:pointer;box-shadow:var(--glow);transition:transform .14s;
+    }
+    .btn:active{transform:translateY(2px)}
+    .ghost {
+      background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:10px;color:var(--muted);cursor:pointer;
+    }
+
+    /* Content area */
+    .content {
+      display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start;
+      height:calc(100% - 120px);
+    }
+
+    .channels {
+      background:var(--card);border-radius:14px;padding:16px;border:1px solid var(--glass-border);height:100%;overflow:auto;
+    }
+    .channels h4{margin:6px 0 12px 0;color:var(--accent-2);letter-spacing:0.6px}
+    .channel-list {display:flex;flex-direction:column;gap:8px}
+    .channel {
+      display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer;color:var(--muted);
+    }
+    .channel:hover{background:linear-gradient(90deg, rgba(155,110,243,0.04), rgba(255,182,249,0.02))}
+    .channel .hash {font-weight:700;color:var(--accent-1);}
+
+    /* Chat card */
+    .chat {
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:14px;padding:14px;border:1px solid var(--glass-border);height:100%;display:flex;flex-direction:column;
+    }
+
+    .messages {
+      flex:1; overflow:auto; padding:8px; display:flex;flex-direction:column;gap:14px;
+    }
+    .message {
+      display:flex;gap:12px;align-items:flex-start;
+    }
+    .avatar {
+      width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#2f1a4f,#6f3ef4);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:14px;
+    }
+    .bubble {
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.03);padding:12px;border-radius:12px;color:var(--muted);max-width:72%;
+      box-shadow:0 6px 18px rgba(11,7,32,0.6);
+    }
+    .meta {font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:6px}
+
+    .composer {
+      margin-top:12px;display:flex;gap:8px;align-items:center;
+    }
+    .composer input {
+      flex:1;padding:12px;border-radius:12px;background:transparent;border:1px solid rgba(255,255,255,0.04);outline:none;color:var(--muted);
+    }
+    .icon-btn {
+      width:46px;height:46px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;
+    }
+
+    /* Right panel */
+    .right {
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:14px;padding:16px;border:1px solid var(--glass-border);height:100%;
+    }
+    .community-card {display:flex;flex-direction:column;gap:10px}
+    .community-card h3{margin:0;color:var(--accent-2)}
+    .tag {display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(155,110,243,0.12);color:var(--accent-2);font-weight:600;font-size:13px}
+
+    /* small helpers */
+    .muted {color:rgba(255,255,255,0.45);font-size:13px}
+
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;background:linear-gradient(180deg,rgba(2,2,10,0.6),rgba(2,2,10,0.8));display:none;align-items:center;justify-content:center;padding:20px;z-index:80}
+    .modal {width:100%;max-width:520px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:14px;padding:20px;border:1px solid var(--glass-border);box-shadow:0 18px 50px rgba(0,0,0,0.6)}
+    .modal h2{margin:0 0 10px 0}
+    .field {display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+    .field input, .field textarea {padding:12px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.04);outline:none;color:var(--muted)}
+    .close {background:transparent;border:0;color:var(--muted);cursor:pointer;font-weight:700;float:right}
+
+    /* small screens */
+    @media (max-width:980px){
+      .app {grid-template-columns:72px 1fr;grid-auto-rows:1fr; padding:12px}
+      .app > .right {display:none}
+      .content {grid-template-columns:1fr;gap:12px}
+    }
+
+    /* micro animations */
+    .pulse {
+      animation: pulse 3s infinite;
+    }
+    @keyframes pulse {
+      0%{box-shadow: 0 6px 20px rgba(155,110,243,0.08)}
+      50%{box-shadow: 0 20px 40px rgba(155,110,243,0.16)}
+      100%{box-shadow: 0 6px 20px rgba(155,110,243,0.08)}
+    }
+
+    /* subtle scrollbars */
+    ::-webkit-scrollbar{width:8px;height:8px}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.04);border-radius:10px}
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="StarDream community preview">
+    <!-- left sidebar -->
+    <aside class="sidebar" aria-hidden="false">
+      <div class="logo" title="StarDream">SD</div>
+
+
+      <div class="server-icons" aria-label="servers" id="serverIcons">
+        <div class="server-icon active" data-server="stardream" title="StarDream">🌌</div>
+        <div class="server-icon" data-server="support" title="Support">🤝</div>
+        <div class="server-icon" data-server="art" title="Art">�</div>
+        <div class="server-icon" data-server="fashion" title="Fashion">�</div>
+        <div class="server-icon" data-server="history" title="History">�️</div>
+        <div class="server-icon" data-server="linguistics" title="Linguistics">🔤</div>
+        <div class="server-icon" data-server="socialwork" title="Social Work">�</div>
+      </div>
+
+      <div style="flex:1"></div>
+
+      <button class="btn pulse" id="joinBtn" aria-label="Join StarDream">Join</button>
+      <button class="ghost" id="loginBtn" aria-label="Login to StarDream">Login</button>
+    </aside>
+
+    <!-- center -->
+    <main class="main">
+      <div class="topbar" role="toolbar" aria-label="Top actions">
+        <div class="search" title="Search channels or posts">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="opacity:0.9">
+            <path d="M21 21l-4.35-4.35" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="11" cy="11" r="6" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="rgba(255,255,255,0.02)"></circle>
+          </svg>
+          <input placeholder="Search channels, posts or people" aria-label="search input" id="searchInput"/>
+        </div>
+
+        <div class="top-actions">
+          <button class="ghost" id="exploreBtn" title="Explore spaces">Explore</button>
+          <button class="btn" id="createBtn" title="Create a post or channel">Create</button>
+        </div>
+      </div>
+
+      <div class="content" role="region" aria-label="Main content">
+        <!-- channels column -->
+        <aside class="channels" aria-label="channels">
+          <h4># Channels</h4>
+          <div class="channel-list">
+            <div class="channel" data-channel="mission-control"><span class="hash">#</span> <div>mission-control</div></div>
+            <div class="channel" data-channel="space-news"><span class="hash">#</span> <div>space-news</div></div>
+            <div class="channel" data-channel="black-holes"><span class="hash">#</span> <div>black-holes</div></div>
+            <div class="channel" data-channel="nebula-gallery"><span class="hash">#</span> <div>nebula-gallery</div></div>
+            <div class="channel" data-channel="astronomy"><span class="hash">#</span> <div>astronomy</div></div>
+            <div class="channel" data-channel="bot-commands"><span class="hash">#</span> <div>bot-commands</div></div>
+          </div>
+
+          <hr style="border:0;border-top:1px solid rgba(255,255,255,0.03);margin:14px 0">
+
+          <h4>Direct</h4>
+          <div class="channel-list">
+            <div class="channel"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="width:36px;height:36px;border-radius:8px;font-size:13px">NO</div><div><strong>Nova</strong><div class="muted">online</div></div></div></div>
+            <div class="channel"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="width:36px;height:36px;border-radius:8px;font-size:13px">OR</div><div><strong>Orion</strong><div class="muted">3h</div></div></div></div>
+          </div>
+        </aside>
+
+        <!-- chat area -->
+        <section class="chat" aria-label="Chat area">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div>
+              <h3 style="margin:0;color:var(--accent-2)"># general</h3>
+              <div class="muted">A place to hang out, ask for advice, and share wins ✨</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <button class="ghost" title="Members">Members: 198</button>
+              <button class="ghost" title="Notifications">Bell</button>
+            </div>
+          </div>
+
+          <div class="messages" id="messages" aria-live="polite">
+            <!-- sample messages -->
+            <div class="message">
+              <div class="avatar">TC</div>
+              <div>
+              <div class="meta"><strong>StarDream Bot</strong> · 2m</div>
+              <div class="bubble">Welcome to StarDream! Be kind — this is a safe space. 💜</div>
+              </div>
+            </div>
+
+            <div class="message">
+              <div class="avatar">NO</div>
+              <div>
+                <div class="meta"><strong>Nova</strong> · 20m</div>
+                <div class="bubble">Just captured an amazing photo of the Carina Nebula! �</div>
+              </div>
+            </div>
+
+            <div class="message">
+              <div class="avatar">OR</div>
+              <div>
+                <div class="meta"><strong>Orion</strong> · 1h</div>
+                <div class="bubble">Found a fascinating black hole research paper. Anyone interested in discussing event horizons? 🕳️✨</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- composer -->
+          <div class="composer" role="form" aria-label="Message composer">
+            <button class="icon-btn" title="Add emoji" id="emojiBtn">😊</button>
+            <input id="msgInput" placeholder="Write a message..." aria-label="Write message" />
+            <button class="btn" id="sendBtn" aria-label="Send message">Send</button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- right panel -->
+    <aside class="right" aria-label="Community info">
+      <div class="community-card">
+        <h3>🌌 StarDream</h3>
+        <div class="muted">A safe, supportive & creative space for dreamers. Built with kindness in mind.</div>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <span class="tag">Friendship</span>
+          <span class="tag">Science</span>
+          <span class="tag">Art</span>
+          <span class="tag">Support</span>
+        </div>
+
+        <div style="margin-top:12px">
+          <strong class="muted">Upcoming events</strong>
+          <ul style="padding-left:18px;margin:8px 0 0 0">
+            <li class="muted">Stargazing Chat — Fri, 8 PM</li>
+            <li class="muted">Art Share — Sat, 5 PM</li>
+          </ul>
+        </div>
+
+
+        <div style="margin-top:18px">
+          <button class="btn" id="reportBtn">Report a safety concern</button>
+        </div>
+
+        <!-- Report Modal -->
+        <div class="modal-backdrop" id="reportModal" role="dialog" aria-modal="true" aria-hidden="true" style="display:none;">
+          <div class="modal" role="document">
+            <button class="close" id="closeReportModal">✕</button>
+            <h2>Report an Issue</h2>
+            <p class="muted">Describe the issue or concern you want to report. This is confidential and will be reviewed by moderators.</p>
+            <div class="field">
+              <label class="muted">Your Report</label>
+              <textarea id="reportBody" rows="4" placeholder="Describe the issue..."></textarea>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end">
+              <button class="ghost" id="cancelReport">Cancel</button>
+              <button class="btn" id="submitReport">Submit Report</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:18px" class="muted">
+          <strong>Tips</strong>
+          <ol style="padding-left:18px;margin:8px 0 0 0">
+            <li>Be kind and respectful</li>
+            <li>Protect your privacy</li>
+            <li>Reach out if you're feeling down</li>
+          </ol>
+        </div>
+      </div>
+    </aside>
+
+    <!-- modal -->
+    <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="modal" role="document">
+        <button class="close" id="closeModal">✕</button>
+        <h2>Create a post</h2>
+        <p class="muted">Share something kind, ask for help, or post art. This preview won't save posts permanently.</p>
+
+        <div class="field">
+          <label class="muted">Title</label>
+          <input id="postTitle" placeholder="Tell the community what's up..." />
+        </div>
+
+        <div class="field">
+          <label class="muted">Message</label>
+          <textarea id="postBody" rows="4" placeholder="Write your message..."></textarea>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="ghost" id="cancelPost">Cancel</button>
+          <button class="btn" id="submitPost">Post</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Basic interactivity for static preview
+    const joinBtn = document.getElementById('joinBtn');
+    const loginBtn = document.getElementById('loginBtn');
+    const createBtn = document.getElementById('createBtn');
+    const exploreBtn = document.getElementById('exploreBtn');
+    const modal = document.getElementById('modal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelPost = document.getElementById('cancelPost');
+    const submitPost = document.getElementById('submitPost');
+    const messages = document.getElementById('messages');
+    const msgInput = document.getElementById('msgInput');
+    const sendBtn = document.getElementById('sendBtn');
+    
+    // Server/channel/message structure
+    const servers = {
+      stardream: {
+        name: 'StarDream',
+        icon: '🌌',
+        channels: ['mission-control', 'space-news', 'black-holes', 'nebula-gallery', 'astronomy', 'bot-commands'],
+        messages: {
+          'mission-control': [
+            {user: 'StarDream Bot', avatar: 'BOT', text: 'Welcome to StarDream! Be kind — this is a safe space. 💜'},
+            {user: 'Nova', avatar: 'NO', text: 'Just captured an amazing photo of the Carina Nebula! 🌌'},
+            {user: 'Orion', avatar: 'OR', text: 'Found a fascinating black hole research paper. Anyone interested in discussing event horizons? 🕳️✨'}
+          ]
+        }
+      },
+      support: {
+        name: 'Support', icon: '🤝', channels: ['general', 'help', 'resources'], messages: {} },
+      art: {
+        name: 'Art', icon: '🎨', channels: ['gallery', 'critique', 'inspiration'], messages: {} },
+      fashion: {
+        name: 'Fashion', icon: '👗', channels: ['trends', 'design', 'share'], messages: {} },
+      history: {
+        name: 'History', icon: '🏛️', channels: ['ancient', 'modern', 'debate'], messages: {} },
+      linguistics: {
+        name: 'Linguistics', icon: '🔤', channels: ['languages', 'etymology', 'practice'], messages: {} },
+      socialwork: {
+        name: 'Social Work', icon: '🌱', channels: ['projects', 'volunteering', 'discussion'], messages: {} }
+    };
+
+    let currentServer = 'stardream';
+    let currentChannel = 'mission-control';
+
+
+
+    // Render server channels
+    function renderChannels() {
+      const channelList = document.querySelector('.channel-list');
+      channelList.innerHTML = '';
+      servers[currentServer].channels.forEach(ch => {
+        const div = document.createElement('div');
+        div.className = 'channel' + (ch === currentChannel ? ' active' : '');
+        div.dataset.channel = ch;
+        div.innerHTML = `<span class="hash">#</span> <div>${ch}</div>`;
+        div.onclick = () => {
+          currentChannel = ch;
+          renderChannels();
+          renderMessages();
+        };
+        channelList.appendChild(div);
+      });
+    }
+
+    // Render messages for current channel
+    function renderMessages() {
+      messages.innerHTML = '';
+      const msgArr = (servers[currentServer].messages[currentChannel] || []);
+      msgArr.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'message';
+        div.innerHTML = `
+          <div class="avatar">${msg.avatar}</div>
+          <div>
+            <div class="meta"><strong>${msg.user}</strong> · just now</div>
+            <div class="bubble">${escapeHtml(msg.text)}</div>
+          </div>
+        `;
+        messages.appendChild(div);
+      });
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    // Render servers in sidebar
+    function renderServers() {
+      const serverIcons = document.getElementById('serverIcons');
+      serverIcons.innerHTML = '';
+      Object.entries(servers).forEach(([key, srv]) => {
+        const div = document.createElement('div');
+        div.className = 'server-icon' + (key === currentServer ? ' active' : '');
+        div.dataset.server = key;
+        div.title = srv.name;
+        div.innerText = srv.icon;
+        div.onclick = () => {
+          currentServer = key;
+          currentChannel = servers[key].channels[0];
+          renderServers();
+          renderChannels();
+          renderMessages();
+        };
+        serverIcons.appendChild(div);
+      });
+    }
+
+    // Initial render
+    renderServers();
+    renderChannels();
+    renderMessages();
+
+    // Modified send button handler to include per-server/channel
+    sendBtn.addEventListener('click', () => {
+      const text = msgInput.value.trim();
+      if(!text) return;
+      if (!servers[currentServer].messages[currentChannel]) servers[currentServer].messages[currentChannel] = [];
+      // Check for bot commands first
+      if (!handleBotCommands(text)) {
+        servers[currentServer].messages[currentChannel].push({user: 'You', avatar: 'YOU', text});
+        renderMessages();
+      }
+      msgInput.value = '';
+      messages.scrollTop = messages.scrollHeight;
+    });
+
+    // Update channel and message rendering on server/channel change
+    // (already handled in renderServers/renderChannels)
+
+    joinBtn.addEventListener('click', () => {
+      alert('Thanks for your interest — in the full app this would open a sign-up flow. 💜');
+    });
+
+    loginBtn.addEventListener('click', () => {
+      alert('Login would open here (demo). Try "Create" to post a message.');
+    });
+
+    createBtn.addEventListener('click', () => {
+      showModal();
+    });
+
+    exploreBtn.addEventListener('click', () => {
+      alert('Explore spaces: Science, Art, Support, and more. (Static demo.)');
+    });
+
+    function showModal(){
+      modal.style.display = 'flex';
+      modal.setAttribute('aria-hidden', 'false');
+    }
+    function hideModal(){
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    closeModal.addEventListener('click', hideModal);
+    cancelPost.addEventListener('click', hideModal);
+
+    submitPost.addEventListener('click', () => {
+      const title = document.getElementById('postTitle').value.trim();
+      const body = document.getElementById('postBody').value.trim();
+      if(!body && !title){
+        alert('Add a title or message before posting 💜');
+        return;
+      }
+
+      // create a message card
+      const div = document.createElement('div');
+      div.className = 'message';
+      div.innerHTML = `
+        <div class="avatar">YOU</div>
+        <div>
+          <div class="meta"><strong>You</strong> · just now</div>
+          <div class="bubble"><strong>${escapeHtml(title)}</strong><div style="margin-top:6px">${escapeHtml(body)}</div></div>
+        </div>
+      `;
+      messages.appendChild(div);
+      hideModal();
+      document.getElementById('postTitle').value = '';
+      document.getElementById('postBody').value = '';
+      messages.scrollTop = messages.scrollHeight;
+    });
+
+    // quick send from composer
+    sendBtn.addEventListener('click', () => {
+      const text = msgInput.value.trim();
+      if(!text) return;
+      const div = document.createElement('div');
+      div.className = 'message';
+      div.innerHTML = `
+        <div class="avatar">YOU</div>
+        <div>
+          <div class="meta"><strong>You</strong> · just now</div>
+          <div class="bubble">${escapeHtml(text)}</div>
+        </div>
+      `;
+      messages.appendChild(div);
+      msgInput.value = '';
+      messages.scrollTop = messages.scrollHeight;
+    });
+
+    // simple search placeholder
+    document.getElementById('searchInput').addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){
+        alert('Search placeholder — in the real app this would find channels, posts, or people.');
+      }
+    });
+
+    // emoji button example
+    document.getElementById('emojiBtn').addEventListener('click', () => {
+      msgInput.value = (msgInput.value + ' 😊').trim();
+      msgInput.focus();
+    });
+
+    // utility: escape HTML
+    function escapeHtml(unsafe) {
+      return unsafe.replace(/[&<"'>]/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#039;"})[m]; });
+    }
+
+    // Bot functionality
+    const botConfig = {
+      name: 'StarDream Bot',
+      prefix: '!',
+      commands: {
+        help: () => 'Available commands: !help, !weather [planet], !fact, !space',
+        weather: (planet) => `Current weather on ${planet || 'Earth'}: Cosmic rays and stellar winds 🌠`,
+        fact: () => {
+          const facts = [
+            "A black hole's event horizon is a point of no return",
+            "The nearest galaxy is Andromeda, 2.5M light years away",
+            "Neutron stars spin up to 600 times per second",
+            "The largest known star is UY Scuti"
+          ];
+          return facts[Math.floor(Math.random() * facts.length)];
+        },
+        space: () => 'The final frontier... 🚀'
+      }
+    };
+
+    function addBotMessage(text) {
+      const div = document.createElement('div');
+      div.className = 'message';
+      div.innerHTML = `
+        <div class="avatar">BOT</div>
+        <div>
+          <div class="meta"><strong>${botConfig.name}</strong> · just now</div>
+          <div class="bubble">${escapeHtml(text)}</div>
+        </div>
+      `;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function handleBotCommands(text) {
+      if (!text.startsWith(botConfig.prefix)) return false;
+      
+      const args = text.slice(1).split(' ');
+      const command = args.shift().toLowerCase();
+      
+      if (command in botConfig.commands) {
+        const response = botConfig.commands[command](args[0]);
+        addBotMessage(response);
+        return true;
+      }
+      return false;
+    }
+
+    // Modified send button handler to include bot commands
+    sendBtn.addEventListener('click', () => {
+      const text = msgInput.value.trim();
+      if(!text) return;
+      
+      // Check for bot commands first
+      if (!handleBotCommands(text)) {
+        // If not a bot command, send as regular message
+        const div = document.createElement('div');
+        div.className = 'message';
+        div.innerHTML = `
+          <div class="avatar">YOU</div>
+          <div>
+            <div class="meta"><strong>You</strong> · just now</div>
+            <div class="bubble">${escapeHtml(text)}</div>
+          </div>
+        `;
+        messages.appendChild(div);
+      }
+      
+      msgInput.value = '';
+      messages.scrollTop = messages.scrollHeight;
+    });
+
+
+    // Report modal logic
+    const reportModal = document.getElementById('reportModal');
+    const reportBtn = document.getElementById('reportBtn');
+    const closeReportModal = document.getElementById('closeReportModal');
+    const cancelReport = document.getElementById('cancelReport');
+    const submitReport = document.getElementById('submitReport');
+    const reportBody = document.getElementById('reportBody');
+
+    function showReportModal() {
+      reportModal.style.display = 'flex';
+      reportModal.setAttribute('aria-hidden', 'false');
+    }
+    function hideReportModal() {
+      reportModal.style.display = 'none';
+      reportModal.setAttribute('aria-hidden', 'true');
+      reportBody.value = '';
+    }
+    if (reportBtn) reportBtn.addEventListener('click', showReportModal);
+    if (closeReportModal) closeReportModal.addEventListener('click', hideReportModal);
+    if (cancelReport) cancelReport.addEventListener('click', hideReportModal);
+    if (submitReport) submitReport.addEventListener('click', () => {
+      if (!reportBody.value.trim()) {
+        alert('Please describe the issue before submitting.');
+        return;
+      }
+      alert('Thank you for your report. Our moderators will review it.');
+      hideReportModal();
+    });
+
+    // close modal on backdrop click
+    modal.addEventListener('click', (e)=>{ if(e.target === modal) hideModal(); });
+    reportModal.addEventListener('click', (e)=>{ if(e.target === reportModal) hideReportModal(); });
+
+    // keyboard shortcut: 'c' to create
+    window.addEventListener('keydown', (e) => {
+      if(e.key === 'c' && !e.metaKey && !e.ctrlKey){
+        showModal();
+      }
+    });
+  </script>
+</body>
+</html>
